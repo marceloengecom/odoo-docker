@@ -1,34 +1,50 @@
-version: '2'
-services:
-  db:
-    image: postgres:17
-    user: root
-    environment:
-      - POSTGRES_USER=odoo
-      - POSTGRES_PASSWORD=odoo18@2024
-      - POSTGRES_DB=postgres
-    restart: always             # run as a service
-    volumes:
-        - ./postgresql:/var/lib/postgresql/data
+version: '3.8'
 
-  odoo18:
-    image: odoo:18
-    user: root
+services:
+  web:
+    image: odoo:18.0
     depends_on:
-      - db
+      - mydb
     ports:
-      - "10018:8069"
-      - "20018:8072" # live chat
-    tty: true
-    command: --
-    environment:
-      - HOST=db
-      - USER=odoo
-      - PASSWORD=odoo18@2024
+      - "8069:8069"
     volumes:
-      #- /etc/timezone:/etc/timezone:ro
-      #- /etc/localtime:/etc/localtime:ro
-      # - ./entrypoint.sh:/entrypoint.sh   # if you want to install additional Python packages, uncomment this line!
-      - ./addons:/mnt/extra-addons
-      - ./etc:/etc/odoo
-    restart: always             # run as a service
+      - odoo-web-data:/var/lib/odoo
+      - odoo-web-data1:/config:/etc/odoo
+      - odoo-web-data2:/addons:/mnt/extra-addons
+    environment:
+      - HOST=postgresql
+      - USER=odoo
+      - PASSWORD=My-503501
+    networks:
+      - odoo_rede
+      
+  postgres:
+    image: postgres:17
+    environment:
+      - POSTGRES_DB=Empresa_Odoo2025
+      - POSTGRES_PASSWORD=My-503501
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    ports:
+      - 5433:5432
+    networks:
+      - odoo_rede
+      
+volumes:
+  odoo-web-data:
+    external: true
+  odoo-web-data1:
+    external: true
+  odoo-web-data2:
+    external: true
+  odoo-db-data:
+    external: true
+
+
+networks:
+  odoo_rede:
+    external: true
+    attachable: true
+    name: odoo_rede
